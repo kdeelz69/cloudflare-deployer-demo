@@ -30,8 +30,17 @@ jobs:
         run: npm run build
 
       # 5. Verify build output
-      - name: Verify build output
-        run: ls -la && ls -la dist && ls -la out
+      - name: Detect build directory
+        id: build-dir
+        run: |
+          if [ -d "dist" ]; then
+            echo "dir=dist" >> $GITHUB_OUTPUT
+          elif [ -d "out" ]; then
+            echo "dir=out" >> $GITHUB_OUTPUT
+          else
+            echo "No build output found"
+            exit 1
+          fi
 
       # 6. Deploy to Cloudflare Pages
       - name: Deploy to Cloudflare Pages
