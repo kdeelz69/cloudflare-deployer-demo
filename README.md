@@ -222,7 +222,7 @@ https://your-project-name.pages.dev
 
 ## 🧪 Demo
 
-* 🔗 Demo Repo: https://github.com/yourusername/cloudflare-pages-deployer-demo
+* 🔗 Demo Repo: https://github.com/kdeelz69/cloudflare-deployer-demo
 * 🌍 Live URL: https://kdeelz-cloud-dep.pages.dev/
 
 ---
