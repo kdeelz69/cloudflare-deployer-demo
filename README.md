@@ -245,7 +245,7 @@ https://your-project-name.pages.dev
 ## 🧪 Demo
 
 * 🔗 Demo Repo: https://github.com/yourusername/cloudflare-pages-deployer-demo
-* 🌍 Live URL: https://your-project.pages.dev
+* 🌍 Live URL: https://kdeelz-cloud-dep.pages.dev/
 
 ---
 
