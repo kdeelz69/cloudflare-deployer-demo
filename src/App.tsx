@@ -15,7 +15,7 @@ function App() {
             </div>
 
             <h1 className="text-5xl md:text-7xl font-bold mb-6 animate-fade-in bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 bg-clip-text text-transparent leading-tight">
-              Congratulations on My Your Cloudflare Deployer
+              Congratulations on Your Cloudflare Deployer
             </h1>
 
             <p className="text-2xl md:text-3xl mb-8 text-purple-200 animate-fade-in-delay-1">

@@ -29,10 +29,23 @@ jobs:
       - name: Build project
         run: npm run build
 
-      # 5. Deploy to Cloudflare Pages
+      # 5. Verify build output
+      - name: Detect build directory
+        id: build-dir
+        run: |
+          if [ -d "dist" ]; then
+            echo "dir=dist" >> $GITHUB_OUTPUT
+          elif [ -d "out" ]; then
+            echo "dir=out" >> $GITHUB_OUTPUT
+          else
+            echo "No build output found"
+            exit 1
+          fi
+
+      # 6. Deploy to Cloudflare Pages
       - name: Deploy to Cloudflare Pages
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.PAGES_DEPLOY_API }}
           accountId: ${{ secrets.PAGES_DEPLOY_ACCOUNT }}
-          command: pages deploy out --project-name=${{ secrets.CLOUDFLARE_PROJECT_NAME }}
+          command: pages deploy dist --project-name=${{ secrets.CLOUDFLARE_PROJECT_NAME }}
