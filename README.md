@@ -1,8 +1,8 @@
-# 🚀 Cloudflare Pages Deployer (GitHub Actions + Static Sites)
+# 🚀 Cloudflare Pages Deployer (GitHub Actions)
 
-A reusable GitHub Actions workflow for building and deploying static frontend applications (Next.js, Vite, React, etc.) to Cloudflare Pages.
+A reusable GitHub Actions workflow for building and deploying static frontend applications to Cloudflare Pages.
 
-This project demonstrates how to automate deployments using GitHub Actions and securely integrate with Cloudflare.
+This project provides a simple, flexible CI/CD pipeline that works with multiple frameworks by automatically detecting the correct build output directory.
 
 ---
 
@@ -12,8 +12,8 @@ This project demonstrates how to automate deployments using GitHub Actions and s
 * ⚡ GitHub Actions CI/CD pipeline
 * 🔐 Secure credential handling with GitHub Secrets
 * 🌍 Deploys to Cloudflare Pages
-* 🔄 Supports multiple frameworks (Next.js, Vite, etc.)
-* 🧠 Auto-detects build output (`dist/` or `out/`)
+* 🔄 Supports multiple frameworks (Vite, React, Next.js static, etc.)
+* 🧠 Auto-detects build output (`dist/`, `out/`, `build/`, `public/`)
 
 ---
 
@@ -25,49 +25,46 @@ This project demonstrates how to automate deployments using GitHub Actions and s
 ├── deploy.yml (template)
 └── .github/
     └── workflows/
-        └── deploy.yml (used in actual project)
+        └── deploy.yml
 ```
 
 ---
 
-## ⚙️ Prerequisites
+## ⚙️ Supported Frameworks
 
-Before using this workflow:
+This workflow supports **any static site** that outputs a build folder.
 
-* GitHub repository
-* Cloudflare account
-* Cloudflare Pages project
-* A frontend app (Next.js, Vite, React, etc.)
+### Common examples:
 
----
-
-## ⚠️ Framework Output Directory (IMPORTANT)
-
-Different frameworks output to different folders:
-
-| Framework               | Build Output |
-| ----------------------- | ------------ |
-| Vite / React            | `dist/`      |
-| Next.js (static export) | `out/`       |
+| Framework               | Output Folder |
+| ----------------------- | ------------- |
+| Vite (React, Vue)       | `dist/`       |
+| Next.js (static export) | `out/`        |
+| Create React App        | `build/`      |
+| Static HTML             | `public/`     |
 
 ---
 
-### 🔹 Next.js setup (only if using Next.js)
+## ⚠️ Important: Static Only
 
-```js
-const nextConfig = {
-  output: 'export',
-};
+This workflow works only for:
 
-export default nextConfig;
-```
+* Static sites
+* Frontend-only apps
+* Exported builds
+
+❌ Not supported:
+
+* SSR apps
+* Full-stack frameworks with server runtime
+* Cloudflare Workers-based apps
 
 ---
 
-## ☁️ Step 1: Create a Cloudflare Pages Project
+## ☁️ Step 1: Create Cloudflare Pages Project
 
 1. Go to Cloudflare Dashboard
-2. Navigate to **Workers & Pages**
+2. Open **Workers & Pages**
 3. Create a new Pages project
 4. Copy your **Project Name**
 
@@ -89,7 +86,7 @@ Account → Cloudflare Pages → Edit
 
 Find it in:
 
-* Cloudflare Dashboard
+* Cloudflare dashboard
 * Workers & Pages section
 
 ---
@@ -98,7 +95,7 @@ Find it in:
 
 Go to:
 
-**Settings → Secrets → Actions**
+**Settings → Secrets and variables → Actions**
 
 Add:
 
@@ -120,7 +117,7 @@ Create:
 
 ---
 
-## 🚀 Final Workflow (Auto-detects build folder)
+## 🚀 Final Workflow
 
 ```yaml
 name: Deploy to Cloudflare Pages
@@ -141,7 +138,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 20
           cache: npm
 
       - name: Install dependencies
@@ -157,6 +154,10 @@ jobs:
             echo "dir=dist" >> $GITHUB_OUTPUT
           elif [ -d "out" ]; then
             echo "dir=out" >> $GITHUB_OUTPUT
+          elif [ -d "build" ]; then
+            echo "dir=build" >> $GITHUB_OUTPUT
+          elif [ -d "public" ]; then
+            echo "dir=public" >> $GITHUB_OUTPUT
           else
             echo "❌ No build output found!"
             exit 1
@@ -174,24 +175,26 @@ jobs:
 
 ## 🔍 How It Works
 
-### Build Phase
+### 1. Build
 
-```yaml
+```bash
 npm ci
 npm run build
 ```
 
-### Detection Phase
+### 2. Detect output folder
 
 Automatically finds:
 
-* `dist/` → Vite
-* `out/` → Next.js
+* `dist/`
+* `out/`
+* `build/`
+* `public/`
 
-### Deploy Phase
+### 3. Deploy
 
 ```bash
-wrangler pages deploy <detected-folder>
+wrangler pages deploy <folder>
 ```
 
 ---
@@ -200,11 +203,11 @@ wrangler pages deploy <detected-folder>
 
 ```bash
 git add .
-git commit -m "Deploy setup"
+git commit -m "Add deploy workflow"
 git push origin main
 ```
 
-Then check:
+Then go to:
 👉 GitHub → Actions
 
 ---
@@ -228,33 +231,18 @@ https://your-project-name.pages.dev
 
 ### ❌ No build folder found
 
-Error:
-
-```text
-No build output found
-```
-
 ✔ Fix:
 
 ```bash
 npm run build
 ```
 
-Check:
-
-* Vite → `dist/`
-* Next.js → `out/`
-
 ---
 
 ### ❌ ENOENT error
 
-```text
-no such file or directory
-```
-
 ✔ Fix:
-Wrong deploy folder (dist vs out)
+Wrong output folder (`dist` vs `out`)
 
 ---
 
@@ -263,7 +251,7 @@ Wrong deploy folder (dist vs out)
 ✔ Fix:
 
 * Check API token permissions
-* Ensure correct Account ID
+* Verify Account ID
 
 ---
 
@@ -299,9 +287,9 @@ cloudflare-pages-deployer-demo
 
 ## 💼 Use Cases
 
-* DevOps projects
+* DevOps learning
 * CI/CD pipelines
-* Cloudflare automation
+* Cloudflare Pages automation
 * Portfolio projects
 
 ---
@@ -318,5 +306,3 @@ If this helped you:
 ## 📣 License
 
 MIT License
-
----

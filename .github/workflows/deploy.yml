@@ -37,8 +37,12 @@ jobs:
             echo "dir=dist" >> $GITHUB_OUTPUT
           elif [ -d "out" ]; then
             echo "dir=out" >> $GITHUB_OUTPUT
+          elif [ -d "build" ]; then
+            echo "dir=build" >> $GITHUB_OUTPUT
+          elif [ -d "public" ]; then
+            echo "dir=public" >> $GITHUB_OUTPUT
           else
-            echo "No build output found"
+            echo "No supported build output found"
             exit 1
           fi
 
@@ -48,4 +52,4 @@ jobs:
         with:
           apiToken: ${{ secrets.PAGES_DEPLOY_API }}
           accountId: ${{ secrets.PAGES_DEPLOY_ACCOUNT }}
-          command: pages deploy dist --project-name=${{ secrets.CLOUDFLARE_PROJECT_NAME }}
+          command: pages deploy ${{ steps.build-dir.outputs.dir }} --project-name=${{ secrets.CLOUDFLARE_PROJECT_NAME }}
