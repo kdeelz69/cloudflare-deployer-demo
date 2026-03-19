@@ -1,18 +1,19 @@
-# 🚀 Cloudflare Pages Deployer (Next.js + GitHub Actions)
+# 🚀 Cloudflare Pages Deployer (GitHub Actions + Static Sites)
 
-A reusable GitHub Actions workflow for building and deploying a static Next.js application to Cloudflare Pages.
+A reusable GitHub Actions workflow for building and deploying static frontend applications (Next.js, Vite, React, etc.) to Cloudflare Pages.
 
-This project demonstrates how to automate deployment using GitHub Actions and securely integrate with Cloudflare.
+This project demonstrates how to automate deployments using GitHub Actions and securely integrate with Cloudflare.
 
 ---
 
 ## 📌 Features
 
 * ✅ Automatic deployment on push to `main`
-* ⚡ Uses GitHub Actions for CI/CD
+* ⚡ GitHub Actions CI/CD pipeline
 * 🔐 Secure credential handling with GitHub Secrets
 * 🌍 Deploys to Cloudflare Pages
-* 📦 Supports static Next.js export (`out` directory)
+* 🔄 Supports multiple frameworks (Next.js, Vite, etc.)
+* 🧠 Auto-detects build output (`dist/` or `out/`)
 
 ---
 
@@ -31,20 +32,27 @@ This project demonstrates how to automate deployment using GitHub Actions and se
 
 ## ⚙️ Prerequisites
 
-Before using this workflow, make sure you have:
+Before using this workflow:
 
-* A GitHub repository
-* A Cloudflare account
-* A Cloudflare Pages project
-* A Next.js project configured for static export
+* GitHub repository
+* Cloudflare account
+* Cloudflare Pages project
+* A frontend app (Next.js, Vite, React, etc.)
 
 ---
 
-## 🧪 Step 1: Configure Next.js for Static Export
+## ⚠️ Framework Output Directory (IMPORTANT)
 
-Your project must generate an `out` folder.
+Different frameworks output to different folders:
 
-Add this to your `next.config.js` or `next.config.mjs`:
+| Framework               | Build Output |
+| ----------------------- | ------------ |
+| Vite / React            | `dist/`      |
+| Next.js (static export) | `out/`       |
+
+---
+
+### 🔹 Next.js setup (only if using Next.js)
 
 ```js
 const nextConfig = {
@@ -54,60 +62,43 @@ const nextConfig = {
 export default nextConfig;
 ```
 
-### 💡 What this does
-
-* Converts your Next.js app into a static site
-* Generates all files inside the `out/` directory
-* This folder will be deployed to Cloudflare
-
 ---
 
-## ☁️ Step 2: Create a Cloudflare Pages Project
+## ☁️ Step 1: Create a Cloudflare Pages Project
 
 1. Go to Cloudflare Dashboard
 2. Navigate to **Workers & Pages**
-3. Click **Create application → Pages**
-4. Create a new project
-5. Copy your **Project Name**
-
-Example:
-
-```text
-my-nextjs-app
-```
+3. Create a new Pages project
+4. Copy your **Project Name**
 
 ---
 
-## 🔑 Step 3: Create a Cloudflare API Token
+## 🔑 Step 2: Create API Token
 
 1. Go to **My Profile → API Tokens**
-2. Click **Create Token**
-3. Choose **Custom Token**
-4. Add permission:
+2. Create **Custom Token**
+3. Add permission:
 
 ```text
 Account → Cloudflare Pages → Edit
 ```
 
-5. Create token and copy it
+---
 
-⚠️ Keep this token secure.
+## 🆔 Step 3: Get Account ID
+
+Find it in:
+
+* Cloudflare Dashboard
+* Workers & Pages section
 
 ---
 
-## 🆔 Step 4: Get your Cloudflare Account ID
+## 🔐 Step 4: Add GitHub Secrets
 
-1. Go to Cloudflare Dashboard
-2. Open **Workers & Pages**
-3. Find **Account ID**
+Go to:
 
----
-
-## 🔐 Step 5: Add GitHub Secrets
-
-Go to your GitHub repo:
-
-**Settings → Secrets and variables → Actions**
+**Settings → Secrets → Actions**
 
 Add:
 
@@ -117,25 +108,19 @@ PAGES_DEPLOY_ACCOUNT
 CLOUDFLARE_PROJECT_NAME
 ```
 
-### Example values:
-
-```text
-PAGES_DEPLOY_API=your_api_token
-PAGES_DEPLOY_ACCOUNT=your_account_id
-CLOUDFLARE_PROJECT_NAME=my-nextjs-app
-```
-
 ---
 
-## 🛠️ Step 6: Add the GitHub Actions Workflow
+## 🛠️ Step 5: Add Workflow
 
-Create this file:
+Create:
 
 ```text
 .github/workflows/deploy.yml
 ```
 
-Paste the following:
+---
+
+## 🚀 Final Workflow (Auto-detects build folder)
 
 ```yaml
 name: Deploy to Cloudflare Pages
@@ -153,7 +138,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up Node.js
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 18
@@ -165,76 +150,66 @@ jobs:
       - name: Build project
         run: npm run build
 
+      - name: Detect build directory
+        id: build-dir
+        run: |
+          if [ -d "dist" ]; then
+            echo "dir=dist" >> $GITHUB_OUTPUT
+          elif [ -d "out" ]; then
+            echo "dir=out" >> $GITHUB_OUTPUT
+          else
+            echo "❌ No build output found!"
+            exit 1
+          fi
+
       - name: Deploy to Cloudflare Pages
         uses: cloudflare/wrangler-action@v3
         with:
-          apiToken: \${{ secrets.PAGES_DEPLOY_API }}
-          accountId: \${{ secrets.PAGES_DEPLOY_ACCOUNT }}
-          command: pages deploy out --project-name=\${{ secrets.CLOUDFLARE_PROJECT_NAME }}
+          apiToken: ${{ secrets.PAGES_DEPLOY_API }}
+          accountId: ${{ secrets.PAGES_DEPLOY_ACCOUNT }}
+          command: pages deploy ${{ steps.build-dir.outputs.dir }} --project-name=${{ secrets.CLOUDFLARE_PROJECT_NAME }}
 ```
 
 ---
 
-## 🔍 Step 7: How the Workflow Works
+## 🔍 How It Works
 
-### Trigger
-
-```yaml
-on:
-  push:
-    branches:
-      - main
-```
-
-Runs the workflow when you push to `main`.
-
----
-
-### Build Process
+### Build Phase
 
 ```yaml
 npm ci
 npm run build
 ```
 
-* Installs dependencies
-* Builds your Next.js app
-* Outputs static files to `out/`
+### Detection Phase
 
----
+Automatically finds:
 
-### Deployment
+* `dist/` → Vite
+* `out/` → Next.js
 
-```yaml
-pages deploy out
+### Deploy Phase
+
+```bash
+wrangler pages deploy <detected-folder>
 ```
 
-* Uploads your static site to Cloudflare Pages
-* Uses your project name and account
-
 ---
 
-## 🚀 Step 8: Deploy Your Project
-
-Run:
+## 🚀 Deploy
 
 ```bash
 git add .
-git commit -m "Add deploy workflow"
+git commit -m "Deploy setup"
 git push origin main
 ```
 
-Then:
-
-1. Go to **GitHub → Actions**
-2. Watch the workflow run
-3. Confirm all steps pass
+Then check:
+👉 GitHub → Actions
 
 ---
 
-## 🌍 Step 9: Access Your Live Site
-
-Your site will be available at:
+## 🌍 Live URL
 
 ```text
 https://your-project-name.pages.dev
@@ -251,91 +226,97 @@ https://your-project-name.pages.dev
 
 ## ⚠️ Common Issues
 
-### ❌ `out` folder missing
+### ❌ No build folder found
+
+Error:
+
+```text
+No build output found
+```
 
 ✔ Fix:
-Make sure you added:
 
-```js
-output: 'export'
+```bash
+npm run build
 ```
+
+Check:
+
+* Vite → `dist/`
+* Next.js → `out/`
 
 ---
 
-### ❌ Invalid API token
-
-✔ Fix:
-Check token permissions:
+### ❌ ENOENT error
 
 ```text
-Cloudflare Pages → Edit
+no such file or directory
 ```
+
+✔ Fix:
+Wrong deploy folder (dist vs out)
+
+---
+
+### ❌ Auth errors
+
+✔ Fix:
+
+* Check API token permissions
+* Ensure correct Account ID
 
 ---
 
 ### ❌ Wrong project name
 
 ✔ Fix:
-Ensure it matches exactly in Cloudflare
-
----
-
-### ❌ Workflow fails
-
-✔ Fix:
-Check GitHub Actions logs for errors
+Must match Cloudflare exactly
 
 ---
 
 ## 🏆 Recommended Setup
 
-### Repo 1 (this repo)
+### Main Repo
 
 ```text
 cloudflare-pages-deployer
 ```
 
-* reusable workflow
-* guide (README)
-
-### Repo 2 (demo)
+### Demo Repo
 
 ```text
 cloudflare-pages-deployer-demo
 ```
 
-* working Next.js app
-* live deployment
-
 ---
 
-## 🔐 Security Notes
+## 🔐 Security
 
-* Never hardcode API keys
+* Never expose API keys
 * Always use GitHub Secrets
-* Keep tokens private
 
 ---
 
-## 💼 Use Case
+## 💼 Use Cases
 
-This project is useful for:
-
-* DevOps learning
+* DevOps projects
 * CI/CD pipelines
-* Automating deployments
-* Cloudflare Pages workflows
+* Cloudflare automation
+* Portfolio projects
+
+---
+
+## ⭐ Support
+
+If this helped you:
+
+* ⭐ Star the repo
+* Share on LinkedIn
 
 ---
 
 ## 📣 License
 
 MIT License
-
----
-
-## ⭐ If you found this useful
-
-Give this repo a star ⭐ and share it!
 
 ---
