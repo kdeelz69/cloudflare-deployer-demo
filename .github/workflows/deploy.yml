@@ -39,4 +39,4 @@ jobs:
         with:
           apiToken: ${{ secrets.PAGES_DEPLOY_API }}
           accountId: ${{ secrets.PAGES_DEPLOY_ACCOUNT }}
-          command: pages deploy out --project-name=${{ secrets.CLOUDFLARE_PROJECT_NAME }}
+          command: pages deploy dist --project-name=${{ secrets.CLOUDFLARE_PROJECT_NAME }}
