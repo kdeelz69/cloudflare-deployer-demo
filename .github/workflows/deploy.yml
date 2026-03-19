@@ -31,7 +31,7 @@ jobs:
 
       # 5. Verify build output
       - name: Verify build output
-        run: ls -la && ls -la out
+        run: ls -la && ls -la dist && ls -la out
 
       # 6. Deploy to Cloudflare Pages
       - name: Deploy to Cloudflare Pages
